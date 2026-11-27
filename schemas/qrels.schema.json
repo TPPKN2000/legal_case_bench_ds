@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:an-le-bench:qrels",
+  "title": "qrels",
+  "type": "object",
+  "properties": {
+    "query_id": {
+      "$ref": "#/$defs/query_id"
+    },
+    "precedent_id": {
+      "$ref": "#/$defs/precedent_id"
+    },
+    "labels": {
+      "$ref": "#/$defs/aspect_labels"
+    },
+    "applicable": {
+      "type": "boolean"
+    },
+    "near_miss": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "same_domain",
+        "same_provision",
+        "different_solution",
+        null
+      ]
+    },
+    "evidence_passage_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/passage_id"
+      }
+    },
+    "n_annotators": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "adjudicated": {
+      "type": "boolean"
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "query_id",
+    "precedent_id",
+    "labels",
+    "applicable",
+    "n_annotators",
+    "adjudicated"
+  ],
+  "additionalProperties": false,
+  "description": "Nhãn tổng hợp cuối cùng (tầng 1–2)",
+  "$defs": {
+    "precedent_id": {
+      "type": "string",
+      "pattern": "^AL-\\d{2,3}/\\d{4}$",
+      "description": "vd AL-53/2022 (số hiệu án lệ bỏ hậu tố /AL)"
+    },
+    "query_id": {
+      "type": "string",
+      "pattern": "^Q\\d{3,}$"
+    },
+    "passage_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9\\-/_]+#[A-Za-z0-9._\\[\\]\\-]+$"
+    },
+    "aspect_labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tinh_tiet",
+        "van_de_phap_ly",
+        "giai_phap_phap_ly",
+        "overall"
+      ],
+      "description": "0 = khía cạnh không liên quan đến vụ việc; 1-4 tăng dần (theo LeCaRDv2 §3.5); overall 1-4, KHÔNG suy ra từ nhãn con",
+      "properties": {
+        "tinh_tiet": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "van_de_phap_ly": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "giai_phap_phap_ly": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "overall": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        }
+      }
+    }
+  }
+}

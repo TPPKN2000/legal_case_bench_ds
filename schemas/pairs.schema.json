@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:an-le-bench:pairs",
+  "title": "pairs",
+  "type": "object",
+  "properties": {
+    "pair_id": {
+      "type": "string"
+    },
+    "query_id": {
+      "$ref": "#/$defs/query_id"
+    },
+    "precedent_id": {
+      "$ref": "#/$defs/precedent_id"
+    },
+    "applicable": {
+      "type": "boolean"
+    },
+    "near_miss_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "same_domain",
+        "same_provision",
+        "different_solution",
+        null
+      ]
+    },
+    "reason_aspect": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "tinh_tiet",
+        "van_de_phap_ly",
+        "giai_phap_phap_ly",
+        null
+      ]
+    },
+    "checklist": {
+      "type": "object",
+      "properties": {
+        "cung_quan_he_phap_luat": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "tinh_tiet_tuong_tu": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "cung_van_de_phap_ly": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "dieu_luat_con_hieu_luc": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "cung_quan_he_phap_luat",
+        "tinh_tiet_tuong_tu",
+        "cung_van_de_phap_ly",
+        "dieu_luat_con_hieu_luc"
+      ],
+      "additionalProperties": false,
+      "description": "ĐỀ XUẤT, cần đối chiếu Điều 8 NQ 03/2015 trước khi dùng làm tiêu chí chấm"
+    },
+    "eligible_by_date": {
+      "type": "boolean"
+    },
+    "mc_options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "is_gold": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "is_gold"
+        ],
+        "additionalProperties": false
+      },
+      "description": "tuỳ chọn: dạng trắc nghiệm chọn đúng giải pháp pháp lý (kiểu CaseHOLD)"
+    },
+    "expert_verified": {
+      "type": "boolean"
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "pair_id",
+    "query_id",
+    "precedent_id",
+    "applicable",
+    "checklist",
+    "eligible_by_date",
+    "expert_verified"
+  ],
+  "additionalProperties": false,
+  "description": "Cặp truy vấn–án lệ cho nhận diện áp dụng được / gần giống nhưng không áp dụng (tầng 2)",
+  "$defs": {
+    "precedent_id": {
+      "type": "string",
+      "pattern": "^AL-\\d{2,3}/\\d{4}$",
+      "description": "vd AL-53/2022 (số hiệu án lệ bỏ hậu tố /AL)"
+    },
+    "query_id": {
+      "type": "string",
+      "pattern": "^Q\\d{3,}$"
+    }
+  }
+}

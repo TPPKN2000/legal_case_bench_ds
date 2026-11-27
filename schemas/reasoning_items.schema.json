@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:an-le-bench:reasoning_items",
+  "title": "reasoning_items",
+  "type": "object",
+  "properties": {
+    "item_id": {
+      "type": "string"
+    },
+    "query_id": {
+      "$ref": "#/$defs/query_id"
+    },
+    "condition": {
+      "type": "string",
+      "enum": [
+        "none",
+        "statute",
+        "statute_plus_case"
+      ]
+    },
+    "provided_sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "id điều luật/án lệ được đưa vào prompt; ngoài danh sách này = ảo giác (CFP)"
+    },
+    "gold_citations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/precedent_id"
+      }
+    },
+    "gold_provisions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/prov_id"
+      }
+    },
+    "reference_answer": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "rubric": {
+      "type": "object",
+      "properties": {
+        "scale_min": {
+          "type": "integer",
+          "const": 1
+        },
+        "scale_max": {
+          "type": "integer",
+          "const": 5
+        },
+        "criteria": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "description"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "scale_min",
+        "scale_max",
+        "criteria"
+      ],
+      "additionalProperties": false
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "item_id",
+    "query_id",
+    "condition",
+    "provided_sources",
+    "gold_citations",
+    "gold_provisions",
+    "rubric"
+  ],
+  "additionalProperties": false,
+  "description": "Tác vụ vận dụng + trung thực (tầng 3–4); CR/CP/CFP tính theo CLERC §4.2.1",
+  "$defs": {
+    "precedent_id": {
+      "type": "string",
+      "pattern": "^AL-\\d{2,3}/\\d{4}$",
+      "description": "vd AL-53/2022 (số hiệu án lệ bỏ hậu tố /AL)"
+    },
+    "prov_id": {
+      "type": "string",
+      "pattern": "^[^#\\s]+#[A-Za-z0-9.]+$",
+      "description": "<số hiệu văn bản>#<d=điều|k=khoản|c=điểm|m=mục>, vd 52/2014/QH13#d5.k2.c"
+    },
+    "query_id": {
+      "type": "string",
+      "pattern": "^Q\\d{3,}$"
+    }
+  }
+}

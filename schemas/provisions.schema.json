@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:an-le-bench:provisions",
+  "title": "provisions",
+  "type": "object",
+  "properties": {
+    "prov_id": {
+      "$ref": "#/$defs/prov_id"
+    },
+    "van_ban": {
+      "type": "object",
+      "properties": {
+        "so_hieu": {
+          "type": "string"
+        },
+        "ten": {
+          "type": "string"
+        },
+        "loai": {
+          "type": "string",
+          "enum": [
+            "luat",
+            "bo_luat",
+            "nghi_quyet",
+            "phap_lenh",
+            "thong_tu_lien_tich",
+            "nghi_dinh",
+            "khac"
+          ]
+        },
+        "co_quan_ban_hanh": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "so_hieu",
+        "ten",
+        "loai"
+      ],
+      "additionalProperties": false
+    },
+    "muc": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "dieu": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "khoan": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "diem": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "text": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "text_mode": {
+      "$ref": "#/$defs/text_mode"
+    },
+    "hieu_luc_tu": {
+      "$ref": "#/$defs/date_or_null"
+    },
+    "hieu_luc_den": {
+      "$ref": "#/$defs/date_or_null"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "con_hieu_luc",
+        "het_hieu_luc",
+        "unknown"
+      ]
+    },
+    "parent_prov_id": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/prov_id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "prov_id",
+    "van_ban",
+    "text",
+    "text_mode",
+    "status"
+  ],
+  "additionalProperties": false,
+  "description": "Điều/khoản/điểm quy phạm; phiên bản theo hiệu lực",
+  "$defs": {
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "date_or_null": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "prov_id": {
+      "type": "string",
+      "pattern": "^[^#\\s]+#[A-Za-z0-9.]+$",
+      "description": "<số hiệu văn bản>#<d=điều|k=khoản|c=điểm|m=mục>, vd 52/2014/QH13#d5.k2.c"
+    },
+    "text_mode": {
+      "type": "string",
+      "enum": [
+        "verbatim",
+        "paraphrase",
+        "stub"
+      ],
+      "description": "verbatim = nguyên văn từ nguồn chính thức; paraphrase = diễn đạt lại; stub = chưa điền"
+    }
+  }
+}

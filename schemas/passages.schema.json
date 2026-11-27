@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:an-le-bench:passages",
+  "title": "passages",
+  "type": "object",
+  "properties": {
+    "passage_id": {
+      "$ref": "#/$defs/passage_id"
+    },
+    "doc_type": {
+      "type": "string",
+      "enum": [
+        "precedent",
+        "judgment"
+      ]
+    },
+    "doc_id": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "tinh_huong",
+        "giai_phap",
+        "noi_dung_vu_an",
+        "nhan_dinh",
+        "quyet_dinh",
+        "khac"
+      ]
+    },
+    "chunking": {
+      "type": "string",
+      "enum": [
+        "structural",
+        "sliding_350_175",
+        "sentence"
+      ]
+    },
+    "paragraph_no": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "in_an_le_content": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "stance": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "adopted",
+        "evidence_finding",
+        "quoted_law",
+        "rejected_quoted",
+        "procedural",
+        null
+      ]
+    },
+    "span": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/span"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "text": {
+      "type": "string"
+    },
+    "text_mode": {
+      "$ref": "#/$defs/text_mode"
+    },
+    "word_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "passage_id",
+    "doc_type",
+    "doc_id",
+    "role",
+    "chunking",
+    "text",
+    "text_mode"
+  ],
+  "additionalProperties": false,
+  "description": "Đơn vị truy xuất mức đoạn (tầng 3)",
+  "$defs": {
+    "span": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "[start,end) ký tự trong text_clean của tài liệu"
+    },
+    "passage_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9\\-/_]+#[A-Za-z0-9._\\[\\]\\-]+$"
+    },
+    "text_mode": {
+      "type": "string",
+      "enum": [
+        "verbatim",
+        "paraphrase",
+        "stub"
+      ],
+      "description": "verbatim = nguyên văn từ nguồn chính thức; paraphrase = diễn đạt lại; stub = chưa điền"
+    }
+  }
+}

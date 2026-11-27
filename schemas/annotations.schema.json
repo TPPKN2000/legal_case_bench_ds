@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:an-le-bench:annotations",
+  "title": "annotations",
+  "type": "object",
+  "properties": {
+    "annotation_id": {
+      "type": "string"
+    },
+    "query_id": {
+      "$ref": "#/$defs/query_id"
+    },
+    "precedent_id": {
+      "$ref": "#/$defs/precedent_id"
+    },
+    "annotator": {
+      "type": "string"
+    },
+    "round": {
+      "type": "string",
+      "enum": [
+        "pilot",
+        "main",
+        "adjudication"
+      ]
+    },
+    "labels": {
+      "$ref": "#/$defs/aspect_labels"
+    },
+    "highlights": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "passage_id": {
+            "$ref": "#/$defs/passage_id"
+          },
+          "span": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/span"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "aspect": {
+            "type": "string",
+            "enum": [
+              "tinh_tiet",
+              "van_de_phap_ly",
+              "giai_phap_phap_ly"
+            ]
+          }
+        },
+        "required": [
+          "passage_id",
+          "aspect"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "timestamp": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "annotation_id",
+    "query_id",
+    "precedent_id",
+    "annotator",
+    "round",
+    "labels",
+    "highlights"
+  ],
+  "additionalProperties": false,
+  "description": "Nhãn từng người chấm + đoạn căn cứ (để tính Cohen's kappa; LeCaRDv2 §3.6)",
+  "$defs": {
+    "span": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "[start,end) ký tự trong text_clean của tài liệu"
+    },
+    "precedent_id": {
+      "type": "string",
+      "pattern": "^AL-\\d{2,3}/\\d{4}$",
+      "description": "vd AL-53/2022 (số hiệu án lệ bỏ hậu tố /AL)"
+    },
+    "query_id": {
+      "type": "string",
+      "pattern": "^Q\\d{3,}$"
+    },
+    "passage_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9\\-/_]+#[A-Za-z0-9._\\[\\]\\-]+$"
+    },
+    "aspect_labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tinh_tiet",
+        "van_de_phap_ly",
+        "giai_phap_phap_ly",
+        "overall"
+      ],
+      "description": "0 = khía cạnh không liên quan đến vụ việc; 1-4 tăng dần (theo LeCaRDv2 §3.5); overall 1-4, KHÔNG suy ra từ nhãn con",
+      "properties": {
+        "tinh_tiet": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "van_de_phap_ly": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "giai_phap_phap_ly": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "overall": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        }
+      }
+    }
+  }
+}

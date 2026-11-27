@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:an-le-bench:queries",
+  "title": "queries",
+  "type": "object",
+  "properties": {
+    "query_id": {
+      "$ref": "#/$defs/query_id"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 10
+    },
+    "linh_vuc": {
+      "$ref": "#/$defs/linh_vuc"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "common",
+        "controversial"
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "judgment_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rewritten_by": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "expert_rewrite",
+            "llm_assisted_expert_checked",
+            "illustrative"
+          ]
+        }
+      },
+      "required": [
+        "judgment_id",
+        "rewritten_by",
+        "method"
+      ],
+      "additionalProperties": false
+    },
+    "key_facts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "legal_issue": {
+      "type": "string"
+    },
+    "query_reference_date": {
+      "$ref": "#/$defs/date_or_null"
+    },
+    "anonymized": {
+      "type": "boolean"
+    },
+    "fold": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "note": {
+      "type": "string"
+    },
+    "curation": {
+      "$ref": "#/$defs/curation"
+    }
+  },
+  "required": [
+    "query_id",
+    "text",
+    "linh_vuc",
+    "type",
+    "provenance",
+    "anonymized",
+    "curation"
+  ],
+  "additionalProperties": false,
+  "description": "Truy vấn do chuyên gia viết lại, ẩn danh, ngắn (LEAD §3.1; ECtHR-PCR §3.3)",
+  "$defs": {
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "date_or_null": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "query_id": {
+      "type": "string",
+      "pattern": "^Q\\d{3,}$"
+    },
+    "linh_vuc": {
+      "type": "string",
+      "enum": [
+        "hon_nhan_gia_dinh",
+        "dan_su",
+        "hinh_su",
+        "kinh_doanh_thuong_mai",
+        "lao_dong",
+        "hanh_chinh",
+        "to_tung",
+        "khac"
+      ]
+    },
+    "curation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "by"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft_unreviewed",
+            "expert_reviewed",
+            "adjudicated"
+          ]
+        },
+        "by": {
+          "type": "string"
+        },
+        "date": {
+          "$ref": "#/$defs/date_or_null"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

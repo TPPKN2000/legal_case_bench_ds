@@ -1,0 +1,479 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:an-le-bench:precedents",
+  "title": "precedents",
+  "type": "object",
+  "properties": {
+    "precedent_id": {
+      "$ref": "#/$defs/precedent_id"
+    },
+    "so_hieu": {
+      "type": "string",
+      "pattern": "^\\d{2,3}/\\d{4}/AL$"
+    },
+    "ten": {
+      "type": "string",
+      "description": "tiêu đề án lệ, vd 'về việc hủy kết hôn trái pháp luật'"
+    },
+    "linh_vuc": {
+      "$ref": "#/$defs/linh_vuc"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "valid",
+        "replaced",
+        "revoked",
+        "unknown"
+      ]
+    },
+    "ngay_thong_qua": {
+      "$ref": "#/$defs/date"
+    },
+    "quyet_dinh_cong_bo": {
+      "type": "object",
+      "properties": {
+        "so_hieu": {
+          "type": "string"
+        },
+        "ngay": {
+          "$ref": "#/$defs/date"
+        }
+      },
+      "required": [
+        "so_hieu",
+        "ngay"
+      ],
+      "additionalProperties": false
+    },
+    "ngay_hieu_luc": {
+      "$ref": "#/$defs/date_or_null"
+    },
+    "ngay_hieu_luc_note": {
+      "type": "string"
+    },
+    "source_judgment": {
+      "type": "object",
+      "properties": {
+        "so_hieu": {
+          "type": "string"
+        },
+        "ngay": {
+          "$ref": "#/$defs/date"
+        },
+        "loai": {
+          "type": "string",
+          "enum": [
+            "giam_doc_tham",
+            "tai_tham",
+            "phuc_tham",
+            "so_tham",
+            "khac"
+          ]
+        },
+        "co_quan": {
+          "type": "string"
+        },
+        "ve_viec": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "so_hieu",
+        "ngay",
+        "loai",
+        "co_quan",
+        "ve_viec"
+      ],
+      "additionalProperties": false
+    },
+    "vi_tri_noi_dung": {
+      "type": "object",
+      "properties": {
+        "phan": {
+          "type": "string",
+          "enum": [
+            "nhan_dinh_cua_toa_an",
+            "noi_dung_vu_an",
+            "khac"
+          ]
+        },
+        "doan": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "phan",
+        "doan"
+      ],
+      "additionalProperties": false,
+      "description": "Đoạn của phần Nhận định cấu thành án lệ (như công bố chính thức)"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "holdings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^H\\d+$"
+          },
+          "tinh_huong": {
+            "type": "string",
+            "description": "Tình huống án lệ (cặp với giải_phap cùng id)"
+          },
+          "giai_phap_phap_ly": {
+            "type": "string"
+          },
+          "legal_issue": {
+            "type": "string"
+          },
+          "key_facts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^K\\d+$"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "necessary": {
+                  "type": "boolean",
+                  "description": "tình tiết cốt lõi: thiếu thì không áp dụng được"
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "text",
+                "necessary"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "provisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/prov_id"
+            }
+          },
+          "applies_to_paragraphs": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "curation": {
+            "$ref": "#/$defs/curation"
+          }
+        },
+        "required": [
+          "id",
+          "tinh_huong",
+          "giai_phap_phap_ly",
+          "key_facts",
+          "curation"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "provisions_cited": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ref": {
+            "type": "string",
+            "description": "như in trong văn bản"
+          },
+          "prov_id": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/prov_id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "an_le_quy_dinh_lien_quan",
+              "trich_trong_nhan_dinh"
+            ]
+          },
+          "paragraph": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "ref",
+          "prov_id",
+          "role"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "text_sections": {
+      "type": "object",
+      "properties": {
+        "noi_dung_vu_an": {
+          "type": "string"
+        },
+        "nhan_dinh": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "no": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "text": {
+                "type": "string"
+              },
+              "in_an_le_content": {
+                "type": "boolean"
+              },
+              "stance": {
+                "type": "string",
+                "enum": [
+                  "adopted",
+                  "evidence_finding",
+                  "quoted_law",
+                  "rejected_quoted",
+                  "procedural"
+                ],
+                "description": "rejected_quoted = đoạn trích lập luận của cấp dưới mà án lệ bác bỏ -> không phải giải pháp"
+              },
+              "cites_provisions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/prov_id"
+                }
+              }
+            },
+            "required": [
+              "no",
+              "text",
+              "in_an_le_content",
+              "stance"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "quyet_dinh": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "noi_dung_vu_an",
+        "nhan_dinh",
+        "quyet_dinh"
+      ],
+      "additionalProperties": false
+    },
+    "text_mode": {
+      "$ref": "#/$defs/text_mode"
+    },
+    "source_url": {
+      "type": "string"
+    },
+    "official_source_url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entity"
+      }
+    },
+    "cited_by": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "curation": {
+      "$ref": "#/$defs/curation"
+    }
+  },
+  "required": [
+    "precedent_id",
+    "so_hieu",
+    "ten",
+    "linh_vuc",
+    "status",
+    "ngay_thong_qua",
+    "quyet_dinh_cong_bo",
+    "ngay_hieu_luc",
+    "source_judgment",
+    "vi_tri_noi_dung",
+    "keywords",
+    "holdings",
+    "provisions_cited",
+    "text_sections",
+    "text_mode",
+    "source_url",
+    "curation"
+  ],
+  "additionalProperties": false,
+  "description": "Một án lệ (corpus truy xuất chính)",
+  "$defs": {
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "date_or_null": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "precedent_id": {
+      "type": "string",
+      "pattern": "^AL-\\d{2,3}/\\d{4}$",
+      "description": "vd AL-53/2022 (số hiệu án lệ bỏ hậu tố /AL)"
+    },
+    "prov_id": {
+      "type": "string",
+      "pattern": "^[^#\\s]+#[A-Za-z0-9.]+$",
+      "description": "<số hiệu văn bản>#<d=điều|k=khoản|c=điểm|m=mục>, vd 52/2014/QH13#d5.k2.c"
+    },
+    "linh_vuc": {
+      "type": "string",
+      "enum": [
+        "hon_nhan_gia_dinh",
+        "dan_su",
+        "hinh_su",
+        "kinh_doanh_thuong_mai",
+        "lao_dong",
+        "hanh_chinh",
+        "to_tung",
+        "khac"
+      ]
+    },
+    "text_mode": {
+      "type": "string",
+      "enum": [
+        "verbatim",
+        "paraphrase",
+        "stub"
+      ],
+      "description": "verbatim = nguyên văn từ nguồn chính thức; paraphrase = diễn đạt lại; stub = chưa điền"
+    },
+    "curation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "by"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft_unreviewed",
+            "expert_reviewed",
+            "adjudicated"
+          ]
+        },
+        "by": {
+          "type": "string"
+        },
+        "date": {
+          "$ref": "#/$defs/date_or_null"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "text"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "PRECEDENT_NO",
+            "JUDGMENT_NO",
+            "LAW_REF",
+            "COURT",
+            "DATE",
+            "MONEY",
+            "PARTY_ROLE",
+            "LEGAL_ACT",
+            "RELIEF"
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "norm": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "dạng chuẩn hoá, vd prov_id hoặc precedent_id"
+        },
+        "span": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/span"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "span": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "[start,end) ký tự trong text_clean của tài liệu"
+    }
+  }
+}
