@@ -10,3 +10,7 @@ Lưu ý
 - `key_facts[].necessary`, `stance`, mọi nhãn trong qrels/annotations/pairs là MINH HOẠ, `curation.status = draft_unreviewed`.
 - `ngay_hieu_luc` để null: chưa kiểm chứng.
 - Checklist ở pairs.jsonl là đề xuất, cần đối chiếu Điều 8 NQ 03/2015.
+
+## Pipeline xử lý án lệ & trích dẫn bản án (mới)
+Package `anlebench/`, notebook Colab `notebooks/legal_case_bench_pipeline.ipynb` và hướng dẫn trong [`docs/PIPELINE.md`](docs/PIPELINE.md).
+Sau `python build_schemas.py` chạy thêm `python -m anlebench.schemas_ext` (thêm schema `precedents_raw`, `judgment_texts`, trường `source` của `judgments`).

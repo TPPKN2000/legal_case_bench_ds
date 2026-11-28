@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:an-le-bench:judgment_texts",
+  "title": "judgment_texts",
+  "type": "object",
+  "description": "text_clean của bản án; judgments[*].span là [start,end) ký tự trong text_clean này",
+  "required": [
+    "judgment_id",
+    "text_clean",
+    "text_sha256",
+    "n_chars",
+    "normalization",
+    "source"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "judgment_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "text_clean": {
+      "type": "string",
+      "minLength": 1
+    },
+    "text_sha256": {
+      "type": "string"
+    },
+    "n_chars": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "normalization": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

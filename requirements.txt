@@ -1,0 +1,6 @@
+jsonschema>=4.18
+beautifulsoup4
+lxml
+requests
+truststore        # site .gov.vn thiếu chứng chỉ trung gian
+nbformat          # chỉ cần để dựng lại notebook (scripts/build_notebook.py)

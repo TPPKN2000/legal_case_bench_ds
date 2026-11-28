@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:an-le-bench:precedents_raw",
+  "title": "precedents_raw",
+  "type": "object",
+  "description": "Án lệ nguyên văn crawl từ anle.toaan.gov.vn (hoặc bản sao); nguồn để thay các trường diễn đạt lại bằng nguyên văn",
+  "required": [
+    "precedent_id",
+    "so_hieu",
+    "num",
+    "year",
+    "ten",
+    "nhan_dinh",
+    "quyet_dinh",
+    "source",
+    "parse_warnings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "precedent_id": {
+      "type": "string",
+      "pattern": "^AL-\\d{2,3}/\\d{4}$"
+    },
+    "so_hieu": {
+      "type": "string",
+      "pattern": "^\\d{2,3}/\\d{4}/AL$"
+    },
+    "num": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "year": {
+      "type": "integer"
+    },
+    "ten": {
+      "type": "string"
+    },
+    "ngay_thong_qua": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "ngay_hieu_luc": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "quyet_dinh_cong_bo": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "so_hieu",
+            "ngay"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "so_hieu": {
+              "type": "string"
+            },
+            "ngay": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "source_judgment": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "so_hieu",
+            "loai",
+            "co_quan",
+            "ve_viec"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "so_hieu": {
+              "type": "string"
+            },
+            "ngay": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "loai": {
+              "type": "string",
+              "enum": [
+                "giam_doc_tham",
+                "tai_tham",
+                "phuc_tham",
+                "so_tham",
+                "khac"
+              ]
+            },
+            "co_quan": {
+              "type": "string"
+            },
+            "ve_viec": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "vi_tri_noi_dung": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "phan",
+            "doan"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "phan": {
+              "type": "string",
+              "enum": [
+                "nhan_dinh_cua_toa_an",
+                "noi_dung_vu_an",
+                "khac"
+              ]
+            },
+            "doan": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "minItems": 1
+            }
+          }
+        }
+      ]
+    },
+    "holdings_raw": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "idx"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "idx": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "tinh_huong": {
+            "type": "string"
+          },
+          "giai_phap_phap_ly": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "quy_dinh_lien_quan": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "noi_dung_an_le": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "noi_dung_vu_an": {
+      "type": "string"
+    },
+    "nhan_dinh": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "no",
+          "text"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "no": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "quyet_dinh": {
+      "type": "string"
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "url"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "site": {
+          "type": "string"
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ddocname": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fetched_at": {
+          "type": "string"
+        },
+        "html_sha1": {
+          "type": "string"
+        }
+      }
+    },
+    "parse_warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

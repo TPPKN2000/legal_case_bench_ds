@@ -376,6 +376,41 @@
     },
     "curation": {
       "$ref": "#/$defs/curation"
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "site",
+        "case_id"
+      ],
+      "additionalProperties": false,
+      "description": "truy vết bản án về trang công bố gốc",
+      "properties": {
+        "site": {
+          "type": "string"
+        },
+        "case_id": {
+          "type": "string"
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "published": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "listing_fields": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
     }
   },
   "required": [
