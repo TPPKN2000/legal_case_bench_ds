@@ -9,8 +9,10 @@ CLI (chạy trên máy có IP Việt Nam nếu Colab bị chặn):
     python -m anlebench.anle_crawl --urls anle_urls.txt --out anle_raw.jsonl --cache cache_html [--discover]
 """
 from __future__ import annotations
-import argparse, re, sys, time, random
+import argparse, io, re, sys, time, random, subprocess
+from html import unescape
 from pathlib import Path
+from urllib.parse import urljoin, urlparse, parse_qs, unquote
 from typing import Iterable
 
 from .common import (read_jsonl, append_jsonl, repair_jsonl, ensure_dir, now_iso, sha1, atomic_write_text)
@@ -118,8 +120,12 @@ def _clean_quotes(s: str) -> str:
     return re.sub(r'^[\s“”"\'‘’.]+|[\s“”"\'‘’.]+$', "", s or "").strip()
 
 
-def parse_anle_lines(lines: list[str], url: str | None = None) -> tuple[dict | None, list[str]]:
+def parse_anle_lines(lines: list[str], url: str | None = None, hint: tuple | None = None) -> tuple[dict | None, list[str]]:
+    """hint = (num, year, title) lấy từ HTML (h3 '90/2026/AL' + dòng 'Về ...') — dùng khi văn bản PDF không có dòng 'Án lệ số'."""
     warns: list[str] = []
+    if hint and not any(_H.match(fold_same_len(l)) for l in lines):
+        lines = [f"Án lệ số {hint[0]:02d}/{hint[1]}/AL"] + ([hint[2]] if hint[2] else []) + lines
+        warns.append("tiêu đề án lệ lấy từ HTML (PDF không có dòng 'Án lệ số')")
     F = [fold_same_len(l) for l in lines]          # cùng độ dài với dòng gốc
     FF = [fold(l) for l in lines]                  # đã gộp khoảng trắng (so sánh nhãn)
 
@@ -135,7 +141,7 @@ def parse_anle_lines(lines: list[str], url: str | None = None) -> tuple[dict | N
     if h is None:
         return None, ["không tìm thấy dòng tiêu đề 'Án lệ số NN/YYYY/AL'"]
     m = _H.match(F[h]); num, year = int(m.group(1)), int(m.group(2))
-    title = lines[h][m.end():].strip(" -–:") or ""
+    title = lines[h][m.end():].strip(" -–:*†‡") or ""
     if not title and h + 1 < len(lines) and FF[h + 1].startswith("ve "):
         title = lines[h + 1].strip()
     elif title and fold(title).startswith("ve ") is False and h + 1 < len(lines) and FF[h + 1].startswith("ve "):
@@ -313,6 +319,171 @@ def parse_anle_html(html: str, url: str | None = None) -> tuple[dict | None, lis
     return rec, warns
 
 
+
+# ------------------------------------------------------------------ PDF (trang chi tiết nhúng bản PDF, HTML không có văn bản)
+class PdfNotFound(RuntimeError):
+    pass
+
+
+def _pdf_lib():
+    """PyMuPDF nếu có, không thì pypdf; tự pip install khi thiếu cả hai."""
+    for name in ("pymupdf", "fitz"):
+        try:
+            return "pymupdf", __import__(name)
+        except ImportError:
+            pass
+    try:
+        import pypdf
+        return "pypdf", pypdf
+    except ImportError:
+        pass
+    for pkg in ("pymupdf", "pypdf"):
+        for extra in ([], ["--break-system-packages"]):
+            if subprocess.run([sys.executable, "-m", "pip", "install", "-q", pkg, *extra], capture_output=True).returncode == 0:
+                return _pdf_lib()
+    raise RuntimeError("Cần PyMuPDF hoặc pypdf để đọc PDF án lệ:  pip install pymupdf")
+
+
+def pdf_pages_text(data: bytes) -> list[str]:
+    kind, lib = _pdf_lib()
+    if kind == "pymupdf":
+        doc = lib.open(stream=data, filetype="pdf")
+        pages = [p.get_text("text") for p in doc]
+    else:
+        pages = [(p.extract_text() or "") for p in lib.PdfReader(io.BytesIO(data)).pages]
+    if sum(len(p.strip()) for p in pages) < 200:
+        raise ValueError("PDF không có lớp chữ (có thể là bản scan) — cần OCR")
+    return pages
+
+
+_NEWPARA = re.compile(r"^(\[\d+\]|[-–•*]\s|\d+[.)]\s|[ivx]+[.)]\s|dieu \d|khoan \d|diem [a-z]\b|tinh huong|giai phap|vi tri noi dung|khai quat noi dung|"
+                      r"quy dinh cua phap luat|tu khoa|nguon an le|noi dung vu an|nhan dinh cua toa|quyet dinh\b|duoc hoi dong tham phan|doan \d)")
+
+
+def pages_to_lines(pages: list[str]) -> list[str]:
+    """Văn bản PDF (xuống dòng theo khổ giấy) → các dòng = đoạn văn: bỏ số trang/đầu cuối trang lặp, nối dòng bị ngắt giữa câu."""
+    per_page = []
+    for pg in pages:
+        ls = []
+        for raw in pg.replace("\r", "\n").split("\n"):
+            s, _ = fix_vn_text(raw.replace("\xa0", " "))
+            s = re.sub(r"[ \t]+", " ", s).strip()
+            if s and not re.fullmatch(r"[-–]?\s*\d{1,3}\s*[-–]?|(?i:trang)\s*\d+\s*(?:/|(?i:trên))\s*\d+", s):
+                ls.append(s)
+        per_page.append(ls)
+    if len(per_page) >= 3:      # đầu/cuối trang lặp lại
+        from collections import Counter
+        cnt = Counter(fold(l) for ls in per_page for l in set(ls))
+        rep = {k for k, v in cnt.items() if v >= max(3, int(0.6 * len(per_page)))}
+        per_page = [[l for l in ls if fold(l) not in rep] for ls in per_page]
+    lines = [l for ls in per_page for l in ls]
+    if not lines: return []
+    lens = sorted(len(l) for l in lines); lmax = lens[int(0.95 * (len(lens) - 1))] or 1
+    out: list[str] = []
+    for ln in lines:
+        if not out:
+            out.append(ln); continue
+        prev = out[-1]
+        is_new = (bool(_NEWPARA.match(fold(ln))) or len(prev) < 0.72 * lmax or prev.endswith(":")
+                  or (prev.isupper() and len(prev) < 90) or (ln.isupper() and len(ln) < 90))
+        if is_new: out.append(ln)
+        else: out[-1] = prev + " " + ln
+    return out
+
+
+def html_hint(html: str) -> tuple | None:
+    """(num, year, title) từ HTML: <h3>90/2026/AL</h3> + dòng 'Về ...' ngay sau."""
+    ls = html_to_lines(html)
+    for i, l in enumerate(ls):
+        m = re.fullmatch(r"(\d{1,3})\s*/\s*(\d{4})\s*/\s*AL", l.strip(), re.I)
+        if m:
+            t = ls[i + 1] if i + 1 < len(ls) and fold(ls[i + 1]).startswith("ve ") else ""
+            return int(m.group(1)), int(m.group(2)), t
+    return None
+
+
+def find_pdf_candidates(html: str, page_url: str) -> list[str]:
+    """URL có thể là PDF: iframe/embed/object (kể cả viewer ?file=...), link 'Tải về', *.pdf, + vài đường dẫn suy đoán theo dDocName."""
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, "lxml"); cands: list[str] = []
+    def add(u):
+        if not u: return
+        u = unescape(str(u)).strip()
+        if not u or u.startswith(("javascript:", "#", "data:", "mailto:")): return
+        full = urljoin(page_url, u)
+        for key in ("file", "src", "url", "pdf", "doc"):          # viewer.html?file=/path/x.pdf
+            for v in parse_qs(urlparse(full).query).get(key, []):
+                if re.search(r"\.pdf|/ucm|/content/|download|file", v, re.I): cands.append(urljoin(page_url, unquote(v)))
+        cands.append(full)
+    for tag in soup.find_all(["iframe", "embed", "object", "source"]):
+        add(tag.get("src") or tag.get("data"))
+    for a in soup.find_all("a", href=True):
+        lab = a.get_text(" ", strip=True).lower(); h = a["href"]
+        if re.search(r"\.pdf|download|taive|tai-ve|showproperty|nodeid|ucm|getfile|attachment|content/conn", h, re.I) \
+                or re.search(r"tải về|tải xuống|download|\bpdf\b", lab):
+            add(h)
+    for m in re.finditer(r"""["'(]([^"'()\s<>]+\.pdf[^"'()\s<>]*)""", html, re.I): add(m.group(1))
+    for m in re.finditer(r"""[?&;](?:file|src)=([^&"'\s<>]+)""", html, re.I): add(unquote(m.group(1)))
+    mm = DDOC_RE.search(page_url)
+    if mm:      # suy đoán (chưa kiểm chứng) — chỉ thử sau cùng
+        d = mm.group(1)
+        for g in (f"{PORTAL}/webcenter/content/conn/UCM/uuid/dDocName:{d}?download", f"{PORTAL}/webcenter/content/conn/UCM/uuid/dDocName:{d}",
+                  f"{PORTAL}/webcenter/portal/anle/ShowProperty?nodeId=/UCMServer/{d}"):
+            cands.append(g)
+    seen, out = set(), []
+    for c in cands:
+        if c not in seen and c.rstrip("/") != page_url.rstrip("/"):
+            seen.add(c); out.append(c)
+    return out
+
+
+def fetch_pdf(session, candidates: list[str], referer: str, cache_dir, delay=(1.0, 2.0), timeout=(15, 120), max_try=14):
+    """Thử lần lượt các URL ứng viên → (bytes PDF, url) hoặc ném PdfNotFound kèm danh sách đã thử."""
+    import requests
+    cache_dir = ensure_dir(cache_dir); tried = []
+    for u in candidates[:max_try]:
+        cf = Path(cache_dir) / (sha1(u) + ".pdf")
+        if cf.exists():
+            return cf.read_bytes(), u
+        try:
+            time.sleep(random.uniform(*delay))
+            r = session.get(u, timeout=timeout, headers={"Referer": referer}, allow_redirects=True)
+            ok = r.status_code == 200 and r.content[:4] == b"%PDF"
+            tried.append(f"{u} → HTTP {r.status_code} {r.headers.get('Content-Type', '')[:40]}" + ("" if ok else " (không phải PDF)"))
+            if ok:
+                cf.write_bytes(r.content); return r.content, u
+        except requests.RequestException as e:
+            tried.append(f"{u} → {repr(e)[:80]}")
+    raise PdfNotFound("; ".join(tried) or "không tìm thấy link PDF trong trang")
+
+
+def parse_anle_page(html: str, url: str, session=None, cache_dir=None, delay=(1.0, 2.0)) -> tuple[dict | None, list[str]]:
+    """HTML có văn bản (trang bản sao) → parse trực tiếp; nếu không (anle.toaan.gov.vn nhúng PDF) → tải PDF rồi parse."""
+    rec, warns = parse_anle_html(html, url)
+    if rec is not None and rec.get("nhan_dinh") and rec.get("holdings_raw"):
+        rec["source"]["text_origin"] = "html"; return rec, warns
+    if session is None or cache_dir is None:
+        return rec, warns + ["trang không có văn bản án lệ trong HTML (cần session + cache_dir để thử PDF)"]
+    cands = find_pdf_candidates(html, url)
+    try:
+        data, pdf_url = fetch_pdf(session, cands, url, cache_dir, delay=delay)
+    except PdfNotFound as e:
+        dd = DDOC_RE.search(url); tag = dd.group(1) if dd else sha1(url)[:10]
+        dbg = Path(ensure_dir(cache_dir)) / f"debug_{tag}.html"; atomic_write_text(dbg, html)
+        raise PdfNotFound(f"không tải được PDF cho {url}; ứng viên: {cands[:6]}; thử: {e}; HTML đã lưu {dbg}")
+    pages = pdf_pages_text(data)
+    lines = pages_to_lines(pages)
+    rec2, w2 = parse_anle_lines(lines, url, hint=html_hint(html))
+    if rec2 is None:
+        raise ValueError("PDF đã tải nhưng không nhận ra cấu trúc án lệ: " + "; ".join(w2) + f" | 5 dòng đầu: {lines[:5]}")
+    mm = DDOC_RE.search(url or "")
+    rec2["source"] = {"site": re.sub(r"^https?://([^/]+).*$", r"\1", url or "") or "unknown", "url": url,
+                      "ddocname": mm.group(1) if mm else None, "fetched_at": now_iso(), "html_sha1": sha1(html),
+                      "pdf_url": pdf_url, "pdf_bytes": len(data), "pdf_pages": len(pages), "text_origin": "pdf"}
+    rec2["parse_warnings"] = w2
+    return rec2, w2
+
+
 # ------------------------------------------------------------------ khám phá URL + chạy crawl
 def discover_urls(session, cache_dir, log=print, max_list_pages=40) -> list[str]:
     """Best-effort: gom link chitietanle?dDocName=TAND... từ trang danh sách án lệ. Trang là Oracle WebCenter (ADF)
@@ -371,7 +542,7 @@ def crawl(urls: list[str], out_jsonl, cache_dir, session=None, delay=(2.0, 4.0),
             log(f"[crawl] hết ngân sách thời gian — dừng sau {n_ok} bản ghi mới"); break
         try:
             html = fetch(session, u, cache_dir, delay=delay)
-            rec, warns = parse_anle_html(html, u)
+            rec, warns = parse_anle_page(html, u, session=session, cache_dir=cache_dir, delay=delay)
             if rec is None:
                 raise ValueError("; ".join(warns))
             if rec["precedent_id"] in done_ids:
